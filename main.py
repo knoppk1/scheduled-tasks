@@ -15,24 +15,28 @@ import os
 # import os and use it to get the Github repository secrets
 MY_EMAIL = os.environ.get("MY_EMAIL")
 MY_PASSWORD = os.environ.get("MY_PASSWORD")
+SMTP = os.environ.get("MY_SMTP")
 
-today = datetime.now()
-today_tuple = (today.month, today.day)
+PATH = "birthdays.csv"
+PORT = 587
 
-data = pandas.read_csv("birthdays.csv")
-birthdays_dict = {(data_row["month"], data_row["day"])                  : data_row for (index, data_row) in data.iterrows()}
-if today_tuple in birthdays_dict:
-    birthday_person = birthdays_dict[today_tuple]
-    file_path = f"letter_templates/letter_{random.randint(1, 3)}.txt"
-    with open(file_path) as letter_file:
-        contents = letter_file.read()
-        contents = contents.replace("[NAME]", birthday_person["name"])
+now = dt.datetime.now()
+day = now.day
+month = now.month
+df = pandas.read_csv(PATH)
+birthdays = df[(df["month"] == month) & (df["day"] == day)]
+if not birthdays.empty:
+    for (index,row) in birthdays.iterrows():
 
-    with smtplib.SMTP("YOUR EMAIL PROVIDER SMTP SERVER ADDRESS") as connection:
-        connection.starttls()
-        connection.login(MY_EMAIL, MY_PASSWORD)
-        connection.sendmail(
-            from_addr=MY_EMAIL,
-            to_addrs=birthday_person["email"],
-            msg=f"Subject:Happy Birthday!\n\n{contents}"
-        )
+        name = row["name"]
+        email = row["email"]
+
+        with open(f"letter_templates/letter_{randint(1,3)}.txt") as file:
+            text = file.read().replace("[NAME]",name)
+
+        with smtplib.SMTP(host=SMTP,port=PORT) as connection:
+            connection.starttls()
+            connection.login(user=MY_EMAIL,password=PASSWORD)
+            connection.sendmail(from_addr=MY_EMAIL,
+                                to_addrs=email,
+                                msg=f"Subject: Happy Birthday\n\n{text}")
