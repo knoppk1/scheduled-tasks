@@ -1,4 +1,3 @@
 pandas
 datetime
-smsplib
 os
